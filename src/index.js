@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 
 const { v4: uuidv4 } = require('uuid');
+const { validate } = require('uuid');
 const regexExp = /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/gi;
 
 const app = express();
@@ -44,24 +45,19 @@ function checksTodoExists(request, response, next) {
   const user = users.find((user) => user.username === username)
 
   if (!user) {
-    return response.status(404).json({ error: "Usuário não existe!" })
+    return response.status(404).json({ error: "User not found" })
   }
 
   //Validando o uuid
-  const idValidation = regexExp.test(id)
-
-  if (!idValidation) {
-    return response.status(400).json({ error: "O ID é inválido!" })
-  }
-
-  //const todoIndex = user.todos.findIndex(todo => todo.id === id)
-  const todoIndex = user.todos.findIndex((todo) => todo.id === id)
-
-  if (todoIndex === -1) {
-    return response.status(404).json({ error: "O todo informado não foi encontrado!" })
+  if (!validate(id)) {
+    return response.status(400).json({ error: "id must be UUID" })
   }
 
   const todo = user.todos.find((todo) => todo.id === id)
+
+  if (!todo) {
+    return response.status(404).json({ error: "todo not found" })
+  }
 
   request.user = user
   request.todo = todo
